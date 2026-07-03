@@ -1,0 +1,5 @@
+{
+  "name": "Kampung Youtuber Voice",
+  "description": "Konversi teks tak terbatas menjadi file audio MP3 dengan kualitas tinggi menggunakan Google AI Gemini.",
+  "requestFramePermissions": []
+}

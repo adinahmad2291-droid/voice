@@ -1,0 +1,294 @@
+<div class="relative min-h-screen flex flex-col items-center justify-center p-2 md:p-4 overflow-x-hidden">
+  <!-- Background Effects -->
+  <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
+  <div class="absolute bottom-0 -right-4 w-72 h-72 bg-indigo-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+
+  <div class="w-full max-w-sm md:max-w-2xl lg:max-w-4xl z-10 py-8">
+    <!-- Header -->
+    <header class="text-center mb-8 animate-fadeIn">
+      <h1 class="text-4xl md:text-5xl font-bold main-gradient-text tracking-tight">Kampung Youtuber Voice</h1>
+      <p class="mt-2 text-base md:text-lg text-slate-400">By Imam Januar</p>
+      <div class="mt-4 flex justify-center space-x-4 text-sm text-slate-500">
+        <span class="flex items-center"><mat-icon class="!text-xs mr-1">check_circle</mat-icon> Kualitas Tinggi</span>
+        <span class="flex items-center"><mat-icon class="!text-xs mr-1">check_circle</mat-icon> Multi-Voice</span>
+        <span class="flex items-center"><mat-icon class="!text-xs mr-1">check_circle</mat-icon> Unlimited Text</span>
+      </div>
+    </header>
+
+    <!-- Main Card -->
+    <main class="glass-card rounded-2xl shadow-2xl p-4 md:p-6 lg:p-8 animate-fadeIn">
+      <div class="space-y-4 md:space-y-6">
+        <!-- Text Input Section -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <label for="text-input" class="block text-sm font-medium text-slate-300">Teks untuk diucapkan:</label>
+            <div class="flex items-center space-x-4">
+              <p class="text-xs text-slate-500">{{ charCount() | number }} karakter</p> 
+              <button (click)="showResetConfirm.set(true)" class="text-slate-400 hover:text-white transition-colors text-xs flex items-center">
+                <mat-icon class="!text-sm mr-1">delete_outline</mat-icon>
+                Hapus Teks
+              </button>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea 
+              id="text-input" 
+              [(ngModel)]="text"
+              rows="8" 
+              class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all resize-y outline-none text-slate-200" 
+              placeholder="Tulis Text Anda di Sini..."
+              maxlength="50000"
+            ></textarea>
+            <div class="absolute bottom-2 right-2 text-xs text-slate-500">
+              <span>{{ remainingChars() | number }} karakter tersisa</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voice and Style Configuration -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div>
+            <label for="voice-select" class="block text-sm font-medium text-slate-300 mb-2">Pilih Suara</label>
+            <select id="voice-select" [(ngModel)]="voice" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all outline-none text-slate-200">
+              <optgroup label="Wanita">
+                @for (v of groupedVoices.Wanita; track v.value) {
+                  <option [value]="v.value" class="bg-slate-900">{{ v.name }}</option>
+                }
+              </optgroup>
+              <optgroup label="Pria">
+                @for (v of groupedVoices.Pria; track v.value) {
+                  <option [value]="v.value" class="bg-slate-900">{{ v.name }}</option>
+                }
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label for="style-input" class="block text-sm font-medium text-slate-300 mb-2">Gaya Bicara (opsional)</label>
+            <input 
+              type="text" 
+              id="style-input" 
+              [(ngModel)]="style"
+              class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all outline-none text-slate-200" 
+              placeholder="Contoh: Bersemangat, Ceria, Formal"
+              maxlength="100"
+            >
+          </div>
+        </div>
+
+        <!-- Volume Control -->
+        <div>
+          <label for="volume-slider" class="block text-sm font-medium text-slate-300 mb-2">Volume (Untuk Pratinjau)</label>
+          <input id="volume-slider" type="range" min="0" max="100" [(ngModel)]="volume" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+          <div class="flex justify-between text-xs text-slate-500 mt-1">
+            <span>0%</span>
+            <span>{{ volume() }}%</span>
+          </div>
+        </div>
+        
+        <!-- Generate Button -->
+        <div class="pt-2">
+          <button 
+            (click)="generateAudio()" 
+            [disabled]="isGenerating()"
+            class="w-full btn-gradient hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 ease-in-out flex items-center justify-center text-lg shadow-lg shadow-purple-900/50 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (isGenerating()) {
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <span>Sedang Memproses, Mohon Sabar Ya Bosku 😉</span>
+            } @else {
+              <mat-icon class="mr-2">play_arrow</mat-icon>
+              <span>Buat Audio</span>
+            }
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Audio Result -->
+    @if (audioUrl()) {
+      <div class="mt-8 glass-card rounded-2xl p-6 md:p-8 animate-fadeIn">
+        <h3 class="text-xl font-semibold mb-4 text-center">Hasil Audio Anda</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-center space-x-1 h-12 mb-4">
+            @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+              <div class="waveform-bar" [style.height.%]="20 + (i % 5) * 15 + (isPlaying() ? 10 : 0)" [class.active]="isPlaying()"></div>
+            }
+          </div>
+          
+          <audio #audioPlayer [src]="audioUrl()" (timeupdate)="onTimeUpdate()" (loadedmetadata)="onLoadedMetadata()" (play)="onPlay()" (pause)="onPause()" (ended)="onEnded()" class="hidden"></audio>
+          
+          <div class="flex flex-col space-y-4">
+            <div class="flex items-center space-x-4">
+              <button (click)="togglePlayPause()" class="w-12 h-12 rounded-full btn-gradient flex items-center justify-center text-white hover:scale-105 transition-transform shadow-lg">
+                <mat-icon>{{ isPlaying() ? 'pause' : 'play_arrow' }}</mat-icon>
+              </button>
+              <div class="flex-1">
+                <input type="range" [min]="0" [max]="duration()" [value]="currentTime()" (input)="seek($event)" class="w-full">
+                <div class="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">
+                  <span>{{ formatTime(currentTime()) }}</span>
+                  <span>{{ formatTime(duration()) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button (click)="openDownload()" class="flex-1 btn-gradient hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 ease-in-out flex items-center justify-center text-md">
+                <mat-icon class="mr-2">download</mat-icon>
+                Download Audio (.mp3)
+              </button>
+              <button (click)="createNew()" class="flex-1 btn-secondary hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 ease-in-out flex items-center justify-center text-md">
+                <mat-icon class="mr-2">add</mat-icon>
+                Buat Baru
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- History Results -->
+    <section class="mt-8 glass-card rounded-2xl p-6 md:p-8 animate-fadeIn">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-semibold text-white">Riwayat Hasil</h3>
+        @if (history().length > 0) {
+          <button (click)="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition-colors flex items-center">
+            <mat-icon class="!text-sm mr-1">delete_sweep</mat-icon>
+            Hapus Semua
+          </button>
+        }
+      </div>
+
+      <div class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+        @for (item of history(); track item.id) {
+          <div class="bg-slate-900/40 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900/60 transition-all">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2 mb-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                  <h4 class="text-sm font-medium text-slate-200 truncate">{{ item.filename }}</h4>
+                </div>
+                <p class="text-xs text-slate-500 line-clamp-1 italic mb-2">"{{ item.text }}"</p>
+                <div class="flex items-center space-x-3 text-[10px] font-mono text-slate-600 uppercase tracking-wider">
+                  <span>{{ item.voice }}</span>
+                  <span>{{ item.size }}</span>
+                  <span>{{ item.timestamp }}</span>
+                </div>
+              </div>
+              <div class="flex space-x-1">
+                <button (click)="playFromHistory(item)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-purple-600 text-slate-400 hover:text-white flex items-center justify-center transition-all">
+                  <mat-icon class="!text-lg">play_arrow</mat-icon>
+                </button>
+                <button (click)="downloadFile(item.url, item.filename)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all">
+                  <mat-icon class="!text-lg">download</mat-icon>
+                </button>
+                <button (click)="deleteFromHistory(item.id)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all">
+                  <mat-icon class="!text-lg">delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="py-12 text-center opacity-20">
+            <mat-icon class="!text-5xl mb-2">history</mat-icon>
+            <p class="text-xs uppercase tracking-widest">Belum ada riwayat</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center py-8 text-slate-500 text-xs">
+      <p>&copy; 2025 Kampung Youtuber Voice. Dibuat dengan ❤️ untuk kemudahan content creation.</p>
+    </footer>
+  </div>
+
+  <!-- Notifications -->
+  <div class="fixed bottom-8 right-8 z-[100] w-full max-w-sm space-y-4">
+    @if (error()) {
+      <div class="glass-card border-red-500/20 text-red-400 p-4 rounded-xl shadow-2xl flex items-start animate-fadeIn">
+        <mat-icon class="mr-3 text-red-500">error_outline</mat-icon>
+        <div class="space-y-1">
+          <p class="text-[10px] font-mono uppercase tracking-widest font-bold opacity-50">Error</p>
+          <p class="text-sm font-medium">{{ error() }}</p>
+        </div>
+      </div>
+    }
+    @if (success()) {
+      <div class="glass-card border-green-500/20 text-green-400 p-4 rounded-xl shadow-2xl flex items-start animate-fadeIn">
+        <mat-icon class="mr-3 text-green-500">check_circle_outline</mat-icon>
+        <div class="space-y-1">
+          <p class="text-[10px] font-mono uppercase tracking-widest font-bold opacity-50">Success</p>
+          <p class="text-sm font-medium">{{ success() }}</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+@if (showResetConfirm()) {
+  <div class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center backdrop-blur-sm p-4 animate-fadeIn">
+    <div class="glass-card rounded-2xl p-8 w-full max-w-md border-white/10">
+      <div class="text-center space-y-6">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-500/10">
+          <mat-icon class="text-red-400 !text-3xl">warning_amber</mat-icon>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-white tracking-tight">Hapus Teks?</h3>
+          <p class="text-slate-400 text-sm">Yakin ingin menghapus semua teks? Tindakan ini tidak bisa dibatalkan.</p>
+        </div>
+        <div class="flex space-x-3">
+          <button (click)="showResetConfirm.set(false)" class="flex-1 btn-secondary text-white py-3 rounded-lg font-bold text-sm">
+            Batal
+          </button>
+          <button (click)="resetText()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-red-600/20">
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Download Modal -->
+@if (showDownloadModal()) {
+  <div class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center backdrop-blur-sm p-4 animate-fadeIn">
+    <div class="glass-card rounded-2xl p-8 w-full max-w-md border-white/10">
+      <div class="text-center space-y-6 mb-8">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-500/10">
+          <mat-icon class="text-purple-400 !text-3xl">download</mat-icon>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-white tracking-tight">Download Audio</h3>
+          <p class="text-slate-400 text-sm">Ubah nama file sesuai keinginan Anda.</p>
+        </div>
+      </div>
+      
+      <div class="space-y-6">
+        <div class="space-y-2">
+          <label for="download-filename" class="text-xs font-medium text-slate-400 ml-1">Nama File</label>
+          <input 
+            id="download-filename"
+            type="text" 
+            [(ngModel)]="downloadFilename"
+            class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 outline-none text-white focus:border-purple-500 transition-all text-sm"
+            placeholder="audio_file"
+          >
+          <div class="flex items-center space-x-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest bg-white/5 p-2 rounded-lg">
+            <span class="opacity-50">Preview:</span>
+            <span class="text-purple-400 font-bold">{{ filenamePreview() }}</span>
+          </div>
+        </div>
+        
+        <div class="flex space-x-3">
+          <button (click)="showDownloadModal.set(false)" class="flex-1 btn-secondary text-white py-3 rounded-lg font-bold text-sm">
+            Batal
+          </button>
+          <button (click)="confirmDownload()" class="flex-1 btn-gradient text-white py-3 rounded-lg font-bold text-sm shadow-lg shadow-purple-600/20">
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
